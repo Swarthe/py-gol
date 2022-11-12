@@ -1,5 +1,3 @@
-[Instructions](https://drive.google.com/drive/u/1/search?q=projet)
-
 # Rules
 
 [Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
