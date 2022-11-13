@@ -6,7 +6,7 @@ COLOUR_DEAD = (0,   0,   0  )
 COLOUR_LIVE = (255, 255, 255)
 
 # Arc-dark hehe
-COLOUR_ADVICE = (102, 168, 246)
+COLOUR_TEXT = (102, 168, 246)
 
 # Game of Life cell state (dead or alive).
 class CellState(Flag):
@@ -98,14 +98,14 @@ class Game:
 
         text = [
             font.render("Cliquez sur la fenêtre pour modifier des cellules",
-                        True, COLOUR_ADVICE),
+                        True, COLOUR_TEXT),
             font.render("Quand vous avez fini, appuyez sur la touche entrée",
-                        True, COLOUR_ADVICE)
+                        True, COLOUR_TEXT)
         ]
 
         pos = [text[i].get_rect(center = (
-            (self.width * self.cell_size)  // 2,
-            (self.height * self.cell_size)  // 10 + (i * 30)
+            (self.width * self.cell_size) // 2,
+            (self.height * self.cell_size) // 10 + (i * 30)
         )) for i in range(len(text))]
 
         for i in range(len(text)):
@@ -145,8 +145,32 @@ class Game:
     def __run(self, time: int):
         while True:
             self.evolve()
+            self.__display_text(f"Cellules vivantes: {self.live_cells()}", 30)
             self.clock.tick()
             pg.time.wait(time)
+
+    # Renders text to the PyGame display.
+    def __display_text(self, text: str, size: int):
+        font = pg.font.SysFont(None, size)
+        text = font.render(text, True, COLOUR_TEXT)
+
+        pos = text.get_rect(center = (
+            (self.width * self.cell_size) // 2,
+            (self.height * self.cell_size) // 10
+        ))
+
+        self.screen.blit(text, pos)
+        pg.display.flip()
+
+    # Returns total number of live cells.
+    def live_cells(self) -> int:
+        result = 0
+
+        for x in range(self.width):
+            for y in range(self.height):
+                result += self.cell(x, y).is_live()
+
+        return result
 
     # Evolves the `Game` by one generation.
     def evolve(self):
