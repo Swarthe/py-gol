@@ -3,9 +3,10 @@
 from life import Game
 
 def main():
-    game = Game(150, 100, 8)
+    randcells = int(input("Please enter number of starting alive cells."))
+    game = Game(150, 100, 8, randcells)
     game.advise_user()
-    game.start(100)
+    game.start(6)
 
 if __name__ == "__main__":
     main()

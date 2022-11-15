@@ -1,5 +1,5 @@
 import pygame as pg
-
+from random import randint
 from enum import Flag
 
 COLOUR_DEAD = (0,   0,   0  )
@@ -58,6 +58,8 @@ class Cell:
 
     def copy(self):
         return Cell(self.state)
+    
+    
 
     def __eq__(self, rhs):
         return self.state == rhs.state
@@ -68,12 +70,17 @@ class Cell:
 # Game of Life board
 class Game:
     # Creates board with all cells dead. `cell_size` is in pixels.
-    def __init__(self, width: int, height: int, cell_size: int):
+    def __init__(self, width: int, height: int, cell_size: int, randcells : int):
         # if we directly multiply the lists, all elements of a row point to the
         # same `Cell` , which is not what we want
         self.board = [[
             Cell(CellState.DEAD) for _ in range(width)
         ] for _ in range(height)]
+        
+    
+        for i in range(randcells):
+            val = (randint(0,width-1), randint(0,height-1))
+            self.board[val[1]][val[0]].toggle()
 
         pg.init()
         pg.display.set_caption("Game of Life")
@@ -88,8 +95,9 @@ class Game:
         ))
 
         self.clock = pg.time.Clock()
-
+    
         self.__clear()
+        self.evolve()
         pg.display.flip()
 
     # Displays user advice for `start()`.
@@ -104,7 +112,9 @@ class Game:
         ]
 
         pos = [text[i].get_rect(center = (
-            (self.width * self.cell_size) // 2,
+            # Positionne le texte au milieu de l'ecran
+            (self.width * self.cell_size) // 2,  
+            # Positionne le texte dans la partie plus haute de l'ecran
             (self.height * self.cell_size) // 10 + (i * 30)
         )) for i in range(len(text))]
 
@@ -121,8 +131,11 @@ class Game:
     # keyboard shortcuts at this point.
     def start(self, time: int):
         pg.event.clear()
+        pg.display.flip()
 
+        
         while True:
+            # Attend action de l'utilisateur
             event = pg.event.wait()
 
             match event.type:
@@ -133,6 +146,7 @@ class Game:
                     mouse_x, mouse_y = event.pos
 
                     self.toggle(
+                        # On obtient coordonees de la bonne cellule en fonction de la position de la souris
                         mouse_x // self.cell_size,
                         mouse_y // self.cell_size
                     )
@@ -181,7 +195,7 @@ class Game:
 
         self.__clear()
 
-        # evolve each cell of the new board
+        # evolve each cell of the new board at once
         for x in range(self.width):
             for y in range(self.height):
                 live = self.live_neighbours(x, y)
@@ -235,6 +249,7 @@ class Game:
     # The cell at coordinates (`x`, `y`) is not included in this list, which
     # will never contain more than 8 cells.
     def neighbours(self, x: int, y: int) -> list[Cell]:
+        # si la cellule se trouve au bord de la fenetre, on l'ignore
         range_x = range(
             -1 if x > 0 else 0,
             2 if x + 1 < self.width else 1
@@ -246,7 +261,7 @@ class Game:
         )
 
         result = []
-
+        # On parcours toute les cellules autour de la cellue choisie
         for x_offset in range_x:
             for y_offset in range_y:
                 # ignore central cell
