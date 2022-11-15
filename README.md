@@ -17,6 +17,7 @@
 - Tests were very useful to detect bugs.
 - Implementing Game of Life was overall simpler than expected, because the rules
   are very simple.
+- Randomisation required some basic probability maths.
 
 ## Frontend
 
@@ -27,3 +28,4 @@
   pause.
 - Class based code structure and generally good programming practices made this
   easier, fewer weird and unexpected bugs.
+- Good aspect ratios and sizes required some basic division maths.

@@ -2,11 +2,19 @@
 
 from life import Game
 
+# Time between generations in milliseconds.
+SPEED = 5
+
 def main():
-    randcells = int(input("Please enter number of starting alive cells."))
-    game = Game(150, 100, 8, randcells)
+    rand_ratio = float(input("Pourcentage de cellules vivantes: ")) / 100
+    height = int(input("Hauteur du tableau en cellules: "))
+    width = (height // 2) * 3       # Suitable 3:2 aspect ratio
+    cell_size = 1000 // height      # Inverse ratio between cell and window size
+
+    game = Game(width, height, cell_size, randcells)
+    game.randomise(rand_ratio)
     game.advise_user()
-    game.start(6)
+    game.start(SPEED)
 
 if __name__ == "__main__":
     main()

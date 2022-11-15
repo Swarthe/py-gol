@@ -1,6 +1,9 @@
 import pygame as pg
-from random import randint
+
+import random as rand
+
 from enum import Flag
+
 
 COLOUR_DEAD = (0,   0,   0  )
 COLOUR_LIVE = (255, 255, 255)
@@ -13,8 +16,10 @@ class CellState(Flag):
     DEAD = 0
     LIVE = 1
 
-    # Returns the corresponding colour.
     def colour(self) -> (int, int, int):
+        '''
+        Returns the corresponding colour.
+        '''
         match self:
             case CellState.DEAD:
                 return COLOUR_DEAD
@@ -28,38 +33,48 @@ class CellState(Flag):
             case CellState.LIVE:
                 return "O"
 
-# Game of Life Cell
 class Cell:
+    '''
+    Game of Life cell.
+    '''
     def __init__(self, state: CellState):
         self.state = state
 
-    # Evolves the `Cell` by one generation.
     def evolve(self, live_neighbours: int):
+        '''
+        Evolves the `Cell` by one generation.
+        '''
         match live_neighbours:
             case 3: self.state = CellState.LIVE
             case 2: pass
             case _: self.state = CellState.DEAD
 
-    # Returns the colour corresponding to the state of the `Cell`.
     def colour(self) -> (int, int, int):
+        '''
+        Returns the colour corresponding to the state of the `Cell`.
+        '''
         return self.state.colour()
 
-    # Returns whether or not the `Cell` is dead.
     def is_dead(self) -> bool:
+        '''
+        Returns whether or not the `Cell` is dead.
+        '''
         return self.state == CellState.DEAD
 
-    # Returns whether or not the `Cell` is alive.
     def is_live(self) -> bool:
+        '''
+        Returns whether or not the `Cell` is alive.
+        '''
         return self.state == CellState.LIVE
 
-    # Switches the state of the cell
     def toggle(self):
+        '''
+        Switches the state of the cell.
+        '''
         self.state = ~self.state
 
     def copy(self):
         return Cell(self.state)
-    
-    
 
     def __eq__(self, rhs):
         return self.state == rhs.state
@@ -67,20 +82,19 @@ class Cell:
     def __str__(self):
         return str(self.state)
 
-# Game of Life board
 class Game:
-    # Creates board with all cells dead. `cell_size` is in pixels.
-    def __init__(self, width: int, height: int, cell_size: int, randcells : int):
+    '''
+    Game of Life board
+    '''
+    def __init__(self, width: int, height: int, cell_size: int):
+        '''
+        Creates board with all cells dead. `cell_size` is in pixels.
+        '''
         # if we directly multiply the lists, all elements of a row point to the
-        # same `Cell` , which is not what we want
+        # same `Cell`, which is not what we want
         self.board = [[
             Cell(CellState.DEAD) for _ in range(width)
         ] for _ in range(height)]
-        
-    
-        for i in range(randcells):
-            val = (randint(0,width-1), randint(0,height-1))
-            self.board[val[1]][val[0]].toggle()
 
         pg.init()
         pg.display.set_caption("Game of Life")
@@ -95,13 +109,40 @@ class Game:
         ))
 
         self.clock = pg.time.Clock()
-    
+
         self.__clear()
         self.evolve()
         pg.display.flip()
 
-    # Displays user advice for `start()`.
+    def randomise(self, rand_ratio: float):
+        '''
+        Randomly toggles a proportion of cells.
+
+        `ratio_live` is a number between 0 and 1 representing the ratio of
+        cells to toggle. If it is 0, nothing is done.
+        '''
+        if rand_ratio == 0.0:
+            return
+
+        rand_cells = round(
+            rand_ratio * self.width * self.height
+        )
+
+        for i in rand_cells:
+            x, y = (
+                rand.randrange(0, self.width),
+                rand.randrange(0, self.height)
+            )
+
+            self.cell(x, y).toggle()
+            self.__update(x, y)
+
+        pg.display.flip()
+
     def advise_user(self):
+        '''
+        Displays user advice for `start()`.
+        '''
         font = pg.font.SysFont(None, 30)
 
         text = [
@@ -112,9 +153,9 @@ class Game:
         ]
 
         pos = [text[i].get_rect(center = (
-            # Positionne le texte au milieu de l'ecran
-            (self.width * self.cell_size) // 2,  
-            # Positionne le texte dans la partie plus haute de l'ecran
+            # Horizontal middle of the screen.
+            (self.width * self.cell_size) // 2,
+            # Top of the screen.
             (self.height * self.cell_size) // 10 + (i * 30)
         )) for i in range(len(text))]
 
@@ -123,19 +164,20 @@ class Game:
 
         pg.display.flip()
 
-    # Starts interactive board, with `time` in milliseconds between each
-    # evolution of the game.
-    #
-    # At first, the user clicks on the cells they want to toggle. When done,
-    # they may press the enter key to begin the game. They may also quit through
-    # keyboard shortcuts at this point.
     def start(self, time: int):
+        '''
+        Starts interactive board, with `time` in milliseconds between each
+        evolution of the game.
+
+        At first, the user clicks on the cells they want to toggle. When done,
+        they may press the enter key to begin the game. They may also quit
+        through keyboard shortcuts at this point.
+        '''
         pg.event.clear()
         pg.display.flip()
 
-        
         while True:
-            # Attend action de l'utilisateur
+            # Wait for user action
             event = pg.event.wait()
 
             match event.type:
@@ -146,7 +188,7 @@ class Game:
                     mouse_x, mouse_y = event.pos
 
                     self.toggle(
-                        # On obtient coordonees de la bonne cellule en fonction de la position de la souris
+                        # Derive cell coordinates from mouse position
                         mouse_x // self.cell_size,
                         mouse_y // self.cell_size
                     )
@@ -155,16 +197,20 @@ class Game:
                     if event.key == pg.K_RETURN:
                         self.__run(time)
 
-    # Iterates through generations of the game every `time` milliseconds.
     def __run(self, time: int):
+        '''
+        Iterates through generations of the game every `time` milliseconds.
+        '''
         while True:
             self.evolve()
             self.__display_text(f"Cellules vivantes: {self.live_cells()}", 30)
             self.clock.tick()
             pg.time.wait(time)
 
-    # Renders text to the PyGame display.
     def __display_text(self, text: str, size: int):
+        '''
+        Renders text to the PyGame display.
+        '''
         font = pg.font.SysFont(None, size)
         text = font.render(text, True, COLOUR_TEXT)
 
@@ -176,8 +222,10 @@ class Game:
         self.screen.blit(text, pos)
         pg.display.flip()
 
-    # Returns total number of live cells.
     def live_cells(self) -> int:
+        '''
+        Returns total number of live cells.
+        '''
         result = 0
 
         for x in range(self.width):
@@ -186,16 +234,18 @@ class Game:
 
         return result
 
-    # Evolves the `Game` by one generation.
     def evolve(self):
-        # deep copy of the board
+        '''
+        Evolves the `Game` by one generation.
+        '''
+        # Deep copy of the board
         next = [[
             c.copy() for c in l
         ] for l in self.board]
 
         self.__clear()
 
-        # evolve each cell of the new board at once
+        # Evolve each cell of the new board at once
         for x in range(self.width):
             for y in range(self.height):
                 live = self.live_neighbours(x, y)
@@ -206,8 +256,10 @@ class Game:
 
         self.board = next
 
-    # Update a `Cell` of the PyGame window.
     def __update(self, x, y):
+        '''
+        Update a `Cell` of the PyGame window.
+        '''
         pos = (
             self.cell_size * x,
             self.cell_size * y
@@ -224,32 +276,42 @@ class Game:
             pg.Rect(pos, size)
         )
 
-    # Clears the PyGame window.
     def __clear(self):
+        '''
+        Clears the PyGame window.
+        '''
         self.screen.fill(COLOUR_DEAD)
 
-    # Toggles `Cell` at coordinates (`x`, `y`)
     def toggle(self, x: int, y: int) -> Cell:
+        '''
+        Toggles `Cell` at coordinates (`x`, `y`)
+        '''
         self.cell(x, y).toggle()
         self.__update(x, y)
         pg.display.flip()
 
-    # Returns `Cell` at coordinates (`x`, `y`)
     def cell(self, x: int, y: int) -> Cell:
+        '''
+        Returns `Cell` at coordinates (`x`, `y`)
+        '''
         return self.board[y][x]
 
-    # Returns the number of live neighbours of a `Cell`.
     def live_neighbours(self, x: int, y: int) -> int:
+        '''
+        Returns the number of live neighbours of a `Cell`.
+        '''
         return sum(
             c.is_live() for c in self.neighbours(x, y)
         )
 
-    # Returns a list of the neighbouring of a `Cell`.
-    #
-    # The cell at coordinates (`x`, `y`) is not included in this list, which
-    # will never contain more than 8 cells.
     def neighbours(self, x: int, y: int) -> list[Cell]:
-        # si la cellule se trouve au bord de la fenetre, on l'ignore
+        '''
+        Returns a list of the neighbouring of a `Cell`.
+
+        The cell at coordinates (`x`, `y`) is not included in this list, which
+        will never contain more than 8 cells.
+        '''
+        # Ignore cells beyond the edge of the board
         range_x = range(
             -1 if x > 0 else 0,
             2 if x + 1 < self.width else 1
@@ -261,10 +323,11 @@ class Game:
         )
 
         result = []
-        # On parcours toute les cellules autour de la cellue choisie
+
+        # Iterate through the surrounding cells.
         for x_offset in range_x:
             for y_offset in range_y:
-                # ignore central cell
+                # Ignore the central cell
                 if (x_offset, y_offset) != (0, 0):
                     result.append(self.cell(
                         x + x_offset,
@@ -278,8 +341,10 @@ class Game:
             str(c) for c in l
         ]) for l in self.board])
 
-# Basic soundness test
 def test():
+    '''
+    Basic soundness test.
+    '''
     # Compares game boards.
     def eq(a: list[list[Cell]], b: list[list[Cell]]) -> bool:
         assert len(a) == len(b)
