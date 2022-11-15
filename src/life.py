@@ -10,6 +10,7 @@ COLOUR_LIVE = (255, 255, 255)
 
 # Arc-dark hehe
 COLOUR_TEXT = (102, 168, 246)
+COLOUR_BG   = (0 ,  0,   0  )
 
 # Game of Life cell state (dead or alive).
 class CellState(Flag):
@@ -128,7 +129,7 @@ class Game:
             rand_ratio * self.width * self.height
         )
 
-        for i in rand_cells:
+        for i in range(rand_cells):
             x, y = (
                 rand.randrange(0, self.width),
                 rand.randrange(0, self.height)
@@ -143,7 +144,8 @@ class Game:
         '''
         Displays user advice for `start()`.
         '''
-        font = pg.font.SysFont(None, 30)
+        font = pg.font.SysFont(None, 60)
+        font_alt = pg.font.SysFont(None, 62)
 
         text = [
             font.render("Cliquez sur la fenêtre pour modifier des cellules",
@@ -156,10 +158,11 @@ class Game:
             # Horizontal middle of the screen.
             (self.width * self.cell_size) // 2,
             # Top of the screen.
-            (self.height * self.cell_size) // 10 + (i * 30)
+            (self.height * self.cell_size) // 10 + (i * 50)
         )) for i in range(len(text))]
 
         for i in range(len(text)):
+            pg.draw.rect(self.screen, COLOUR_BG, pos[i])
             self.screen.blit(text[i], pos[i])
 
         pg.display.flip()
@@ -203,7 +206,7 @@ class Game:
         '''
         while True:
             self.evolve()
-            self.__display_text(f"Cellules vivantes: {self.live_cells()}", 30)
+            self.__display_text(f"Cellules vivantes: {self.live_cells()}", 60)
             self.clock.tick()
             pg.time.wait(time)
 
@@ -219,6 +222,7 @@ class Game:
             (self.height * self.cell_size) // 10
         ))
 
+        pg.draw.rect(self.screen, COLOUR_BG, pos)
         self.screen.blit(text, pos)
         pg.display.flip()
 
