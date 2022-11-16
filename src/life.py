@@ -139,7 +139,7 @@ class Game:
             )
 
             self.cell(x, y).toggle()
-            self.__update(x, y)
+            self.__display_cell(x, y)
 
         pg.display.flip()
 
@@ -257,13 +257,13 @@ class Game:
             for y in range(self.height):
                 live = self.live_neighbours(x, y)
                 next[y][x].evolve(live)
-                self.__update(x, y)
+                self.__display_cell(x, y)
 
         pg.display.flip()
 
         self.board = next
 
-    def __update(self, x, y):
+    def __display_cell(self, x, y):
         '''
         Update a `Cell` of the PyGame window.
         '''
@@ -294,7 +294,7 @@ class Game:
         Toggles `Cell` at coordinates (`x`, `y`)
         '''
         self.cell(x, y).toggle()
-        self.__update(x, y)
+        self.__display_cell(x, y)
         pg.display.flip()
 
     def cell(self, x: int, y: int) -> Cell:
