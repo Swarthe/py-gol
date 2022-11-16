@@ -120,10 +120,13 @@ class Game:
         Randomly toggles a proportion of cells.
 
         `ratio_live` is a number between 0 and 1 representing the ratio of
-        cells to toggle. If it is 0, nothing is done.
+        cells to toggle. If it is 0, nothing is done, and a value above 1 is
+        considered equivalent to 1. The same cell may be toggled multiple times.
         '''
         if rand_ratio == 0.0:
             return
+        elif rand_ratio > 1.0:
+            rand_ratio = 1.0
 
         rand_cells = round(
             rand_ratio * self.width * self.height
@@ -140,9 +143,41 @@ class Game:
 
         pg.display.flip()
 
-    def advise_user(self):
+    def user_edit(self):
         '''
-        Displays user advice for `start()`.
+        Allow the user to edit the board.
+
+        At first, the user clicks on the cells they want to toggle. When done,
+        they may press the enter key to proceed. They may also quit through
+        keyboard shortcuts at this point.
+        '''
+        self.__advise_user()
+        pg.event.clear()
+
+        while True:
+            # Wait for user action
+            event = pg.event.wait()
+
+            match event.type:
+                case pg.QUIT:
+                    pg.quit()
+
+                case pg.MOUSEBUTTONDOWN:
+                    mouse_x, mouse_y = event.pos
+
+                    self.toggle(
+                        # Derive cell coordinates from mouse position
+                        mouse_x // self.cell_size,
+                        mouse_y // self.cell_size
+                    )
+
+                case pg.KEYDOWN:
+                    if event.key == pg.K_RETURN:
+                        return
+
+    def __advise_user(self):
+        '''
+        Displays user advice for `edit()`.
         '''
         font = pg.font.SysFont(None, 60)
         font_alt = pg.font.SysFont(None, 62)
@@ -167,48 +202,16 @@ class Game:
 
         pg.display.flip()
 
-    def start(self, time: int):
+    def start(self, speed: int):
         '''
-        Starts interactive board, with `time` in milliseconds between each
+        Starts interactive board, with `speed` in milliseconds between each
         evolution of the game.
-
-        At first, the user clicks on the cells they want to toggle. When done,
-        they may press the enter key to begin the game. They may also quit
-        through keyboard shortcuts at this point.
-        '''
-        pg.event.clear()
-        pg.display.flip()
-
-        while True:
-            # Wait for user action
-            event = pg.event.wait()
-
-            match event.type:
-                case pg.QUIT:
-                    pg.quit()
-
-                case pg.MOUSEBUTTONDOWN:
-                    mouse_x, mouse_y = event.pos
-
-                    self.toggle(
-                        # Derive cell coordinates from mouse position
-                        mouse_x // self.cell_size,
-                        mouse_y // self.cell_size
-                    )
-
-                case pg.KEYDOWN:
-                    if event.key == pg.K_RETURN:
-                        self.__run(time)
-
-    def __run(self, time: int):
-        '''
-        Iterates through generations of the game every `time` milliseconds.
         '''
         while True:
             self.evolve()
             self.__display_text(f"Cellules vivantes: {self.live_cells()}", 60)
             self.clock.tick()
-            pg.time.wait(time)
+            pg.time.wait(speed)
 
     def __display_text(self, text: str, size: int):
         '''
