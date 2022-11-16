@@ -2,6 +2,7 @@
 
 from life import Game
 
+# Default values
 RAND_RATIO = 0.15
 HEIGHT = 100
 
